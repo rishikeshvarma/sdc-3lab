@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>React Programs Showcase</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --code-bg: #0b1120;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --border: #334155;
+      --success: #22c55e;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      padding: 40px 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 32px;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 28px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .card-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .copy-btn {
+      background-color: var(--border);
+      color: var(--text-main);
+      border: none;
+      padding: 7px 14px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .copy-btn:hover {
+      background-color: var(--accent);
+      color: #0f172a;
+    }
+
+    .copy-btn.copied {
+      background-color: var(--success);
+      color: #fff;
+    }
+
+    .code-container {
+      position: relative;
+      background-color: var(--code-bg);
+      max-height: 480px;
+      overflow-y: auto;
+    }
+
+    pre {
+      padding: 18px 20px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      color: #e2e8f0;
+      white-space: pre;
+    }
+
+    code {
+      font-family: inherit;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>React Code Hub</h1>
+      <p>Clean reference programs ready to copy and paste.</p>
+    </header>
+
+    <!-- Card 1 -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Program 4: Simplified E-Commerce App</div>
+          <div class="card-subtitle">React Router, context state, and offline catalogue</div>
+        </div>
+        <button class="copy-btn" onclick="copyCode('code-prog-4', this)">
+          Copy Code
+        </button>
+      </div>
+      <div class="code-container">
+        <pre><code id="code-prog-4">// Program 4: Simplified e-commerce app with React Router (works fully offline)
+// Needs: npm install react-router-dom   (one-time; afterwards no internet needed)
+// Usage: save as src/App.jsx in a Vite/CRA project.
+import React, { createContext, useContext, useState } from "react";
+import {
+  BrowserRouter, Routes, Route, Link, NavLink,
+  Navigate, useParams, useNavigate, useLocation,
+} from "react-router-dom";
+
+// ---------- Local data (no API) ----------
+const PRODUCTS = [
+  { id: 1, name: "Laptop", price: 55000, desc: "14-inch, 16GB RAM, 512GB SSD" },
+  { id: 2, name: "Headphones", price: 2500, desc: "Wireless, noise cancelling" },
+  { id: 3, name: "Smart Watch", price: 4000, desc: "Heart-rate and sleep tracking" },
+  { id: 4, name: "Backpack", price: 1200, desc: "Water-resistant, 25L" },
+];
+
+// ---------- Global state (auth + cart) ----------
+const AppContext = createContext();
+const useApp = () => useContext(AppContext);
+
+function AppProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [cart, setCart] = useState([]);
+
+  const addToCart = (product) => setCart((c) => [...c, product]);
+  const removeFromCart = (index) => setCart((c) => c.filter((_, i) => i !== index));
+
+  return (
+    <AppContext.Provider value={{ user, setUser, cart, addToCart, removeFromCart }}>
+      {children}
+    </AppContext.Provider>
+  );
+}
+
+// ---------- Protected route ----------
+function ProtectedRoute({ children }) {
+  const { user } = useApp();
+  const location = useLocation();
+  if (!user) return &lt;Navigate to="/login" state={{ from: location.pathname }} replace /&gt;;
+  return children;
+}
+
+// ---------- Navigation ----------
+function Navbar() {
+  const { user, setUser, cart } = useApp();
+  const navigate = useNavigate();
+  const style = ({ isActive }) => ({
+    marginRight: 15, textDecoration: "none",
+    fontWeight: isActive ? "bold" : "normal", color: isActive ? "#c0392b" : "#333",
+  });
+
+  return (
+    &lt;nav style={{ padding: 12, background: "#eee", display: "flex", alignItems: "center" }}&gt;
+      &lt;NavLink to="/" style={style}&gt;Home&lt;/NavLink&gt;
+      &lt;NavLink to="/products" style={style}&gt;Products&lt;/NavLink&gt;
+      &lt;NavLink to="/contact" style={style}&gt;Contact&lt;/NavLink&gt;
+      &lt;NavLink to="/cart" style={style}&gt;Cart ({cart.length})&lt;/NavLink&gt;
+      &lt;span style={{ marginLeft: "auto" }}&gt;
+        {user ? (
+          &lt;&gt;
+            Hi, {user}{" "}
+            &lt;button onClick={() => { setUser(null); navigate("/"); }}&gt;Logout&lt;/button&gt;
+          &lt;/&gt;
+        ) : (
+          &lt;NavLink to="/login" style={style}&gt;Login&lt;/NavLink&gt;
+        )}
+      &lt;/span&gt;
+    &lt;/nav&gt;
+  );
+}
+
+// ---------- Pages ----------
+const Home = () => (
+  &lt;div&gt;
+    &lt;h2&gt;Welcome to MyShop&lt;/h2&gt;
+    &lt;p&gt;Browse our products and add your favourites to the cart.&lt;/p&gt;
+    &lt;Link to="/products"&gt;Shop now&lt;/Link&gt;
+  &lt;/div&gt;
+);
+
+const Products = () => (
+  &lt;div&gt;
+    &lt;h2&gt;Products&lt;/h2&gt;
+    {PRODUCTS.map((p) => (
+      &lt;div key={p.id} style={{ border: "1px solid #ccc", padding: 10, margin: "10px 0" }}>
+        &lt;h3&gt;{p.name}&lt;/h3&gt;
+        &lt;p&gt;₹{p.price}&lt;/p&gt;
+        &lt;Link to={`/products/${p.id}`}&gt;View details&lt;/Link&gt;
+      &lt;/div&gt;
+    ))}
+  &lt;/div&gt;
+);
+
+function ProductDetails() {
+  const { id } = useParams(); // dynamic routing
+  const { addToCart } = useApp();
+  const product = PRODUCTS.find((p) => p.id === Number(id));
+
+  if (!product) return &lt;h2&gt;Product not found&lt;/h2&gt;;
+  return (
+    &lt;div&gt;
+      &lt;h2&gt;{product.name}&lt;/h2&gt;
+      &lt;p&gt;{product.desc}&lt;/p&gt;
+      &lt;p&gt;&lt;b&gt;₹{product.price}&lt;/b&gt;&lt;/p&gt;
+      &lt;button onClick={() => addToCart(product)}&gt;Add to cart&lt;/button&gt;{" "}
+      &lt;Link to="/products"&gt;Back&lt;/Link&gt;
+    &lt;/div&gt;
+  );
+}
+
+function Contact() {
+  const [sent, setSent] = useState(false);
+  return (
+    &lt;div&gt;
+      &lt;h2&gt;Contact Us&lt;/h2&gt;
+      {sent ? (
+        &lt;p&gt;Thanks! We will get back to you.&lt;/p&gt;
+      ) : (
+        &lt;&gt;
+          &lt;input placeholder="Your email" /&gt;&lt;br /&gt;&lt;br /&gt;
+          &lt;textarea placeholder="Message" /&gt;&lt;br /&gt;&lt;br /&gt;
+          &lt;button onClick={() => setSent(true)}&gt;Send&lt;/button&gt;
+        &lt;/&gt;
+      )}
+    &lt;/div&gt;
+  );
+}
+
+function Login() {
+  const { setUser } = useApp();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [name, setName] = useState("");
+  const [pass, setPass] = useState("");
+  const [error, setError] = useState("");
+
+  const handleLogin = () => {
+    // Demo credentials: any name with password "1234"
+    if (name && pass === "1234") {
+      setUser(name);
+      navigate(location.state?.from || "/", { replace: true });
+    } else {
+      setError("Enter a username and the password 1234");
+    }
+  };
+
+  return (
+    &lt;div&gt;
+      &lt;h2&gt;Login&lt;/h2&gt;
+      &lt;input placeholder="Username" value={name} onChange={(e) => setName(e.target.value)} /&gt;&lt;br /&gt;&lt;br /&gt;
+      &lt;input type="password" placeholder="Password (1234)" value={pass}
+             onChange={(e) => setPass(e.target.value)} /&gt;&lt;br /&gt;&lt;br /&gt;
+      &lt;button onClick={handleLogin}&gt;Login&lt;/button&gt;
+      {error && &lt;p style={{ color: "red" }}&gt;{error}&lt;/p&gt;}
+    &lt;/div&gt;
+  );
+}
+
+function Cart() {
+  const { cart, removeFromCart } = useApp();
+  const total = cart.reduce((sum, p) => sum + p.price, 0);
+  return (
+    &lt;div&gt;
+      &lt;h2&gt;Your Cart&lt;/h2&gt;
+      {cart.length === 0 ? &lt;p&gt;Cart is empty.&lt;/p&gt; : (
+        &lt;&gt;
+          {cart.map((p, i) => (
+            &lt;p key={i}&gt;
+              {p.name} - ₹{p.price}{" "}
+              &lt;button onClick={() => removeFromCart(i)}&gt;Remove&lt;/button&gt;
+            &lt;/p&gt;
+          ))}
+          &lt;h3&gt;Total: ₹{total}&lt;/h3&gt;
+        &lt;/&gt;
+      )}
+    &lt;/div&gt;
+  );
+}
+
+const NotFound = () => (
+  &lt;div&gt;
+    &lt;h2&gt;404 - Page Not Found&lt;/h2&gt;
+    &lt;Link to="/"&gt;Go back home&lt;/Link&gt;
+  &lt;/div&gt;
+);
+
+// ---------- App ----------
+export default function App() {
+  return (
+    &lt;AppProvider&gt;
+      &lt;BrowserRouter&gt;
+        &lt;Navbar /&gt;
+        &lt;div style={{ padding: 20 }}&gt;
+          &lt;Routes&gt;
+            &lt;Route path="/" element={&lt;Home /&gt;} /&gt;
+            &lt;Route path="/products" element={&lt;Products /&gt;} /&gt;
+            &lt;Route path="/products/:id" element={&lt;ProductDetails /&gt;} /&gt;
+            &lt;Route path="/contact" element={&lt;Contact /&gt;} /&gt;
+            &lt;Route path="/login" element={&lt;Login /&gt;} /&gt;
+            &lt;Route path="/cart" element={&lt;ProtectedRoute&gt;&lt;Cart /&gt;&lt;/ProtectedRoute&gt;} /&gt;
+            &lt;Route path="*" element={&lt;NotFound /&gt;} /&gt;
+          &lt;/Routes&gt;
+        &lt;/div&gt;
+      &lt;/BrowserRouter&gt;
+    &lt;/AppProvider&gt;
+  );
+}</code></pre>
+      </div>
+    </div>
+
+    <!-- Card 2 -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Program 5: Dynamic Form Generator</div>
+          <div class="card-subtitle">Form rendered from config object without external packages</div>
+        </div>
+        <button class="copy-btn" onclick="copyCode('code-prog-5', this)">
+          Copy Code
+        </button>
+      </div>
+      <div class="code-container">
+        <pre><code id="code-prog-5">// Program 5: Dynamic form generated from a JavaScript configuration object
+// No extra packages needed. Usage: save as src/App.jsx
+import React, { useState } from "react";
+
+// ---------- Configuration object ----------
+const formConfig = {
+  title: "Student Registration",
+  fields: [
+    { name: "fullName", label: "Full Name", type: "text", placeholder: "Enter name", required: true },
+    { name: "email", label: "Email", type: "email", placeholder: "Enter email", required: true },
+    { name: "age", label: "Age", type: "number", placeholder: "Enter age" },
+    { name: "gender", label: "Gender", type: "radio", options: ["Male", "Female", "Other"] },
+    { name: "course", label: "Course", type: "select", options: ["BCA", "B.Tech", "MCA", "MBA"] },
+    { name: "skills", label: "Skills", type: "checkbox", options: ["React", "Java", "Python"] },
+    { name: "about", label: "About You", type: "textarea", placeholder: "Short description" },
+  ],
+};
+
+// Build initial state from config
+const buildInitialState = (config) => {
+  const state = {};
+  config.fields.forEach((f) => {
+    state[f.name] = f.type === "checkbox" ? [] : "";
+  });
+  return state;
+};
+
+export default function App() {
+  const [formData, setFormData] = useState(buildInitialState(formConfig));
+  const [submitted, setSubmitted] = useState(null);
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    if (type === "checkbox") {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: checked ? [...prev[name], value] : prev[name].filter((v) => v !== value),
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setSubmitted(formData);
+  };
+
+  // Render one field depending on its type
+  const renderField = (f) => {
+    switch (f.type) {
+      case "select":
+        return (
+          &lt;select name={f.name} value={formData[f.name]} onChange={handleChange} required={f.required}&gt;
+            &lt;option value=""&gt;-- Select --&lt;/option&gt;
+            {f.options.map((o) => &lt;option key={o} value={o}&gt;{o}&lt;/option&gt;)}
+          &lt;/select&gt;
+        );
+      case "radio":
+        return f.options.map((o) => (
+          &lt;label key={o} style={{ marginRight: 12 }}&gt;
+            &lt;input type="radio" name={f.name} value={o}
+                   checked={formData[f.name] === o} onChange={handleChange} /&gt; {o}
+          &lt;/label&gt;
+        ));
+      case "checkbox":
+        return f.options.map((o) => (
+          &lt;label key={o} style={{ marginRight: 12 }}&gt;
+            &lt;input type="checkbox" name={f.name} value={o}
+                   checked={formData[f.name].includes(o)} onChange={handleChange} /&gt; {o}
+          &lt;/label&gt;
+        ));
+      case "textarea":
+        return &lt;textarea name={f.name} placeholder={f.placeholder}
+                         value={formData[f.name]} onChange={handleChange} /&gt;;
+      default:
+        return &lt;input type={f.type} name={f.name} placeholder={f.placeholder}
+                      value={formData[f.name]} onChange={handleChange} required={f.required} /&gt;;
+    }
+  };
+
+  return (
+    &lt;div style={{ maxWidth: 480, margin: "30px auto", fontFamily: "sans-serif" }}&gt;
+      &lt;h2&gt;{formConfig.title}&lt;/h2&gt;
+      &lt;form onSubmit={handleSubmit}&gt;
+        {formConfig.fields.map((f) => (
+          &lt;div key={f.name} style={{ marginBottom: 14 }}&gt;
+            &lt;label style={{ display: "block", fontWeight: "bold", marginBottom: 4 }}&gt;
+              {f.label}{f.required && " *"}
+            &lt;/label&gt;
+            {renderField(f)}
+          &lt;/div&gt;
+        ))}
+        &lt;button type="submit"&gt;Submit&lt;/button&gt;
+      &lt;/form&gt;
+
+      {submitted && (
+        &lt;div style={{ marginTop: 25, padding: 12, background: "#f3f3f3" }}&gt;
+          &lt;h3&gt;Submitted Data&lt;/h3&gt;
+          {formConfig.fields.map((f) => (
+            &lt;p key={f.name}&gt;
+              &lt;b&gt;{f.label}:&lt;/b&gt;{" "}
+              {Array.isArray(submitted[f.name]) ? submitted[f.name].join(", ") : submitted[f.name]}
+            &lt;/p&gt;
+          ))}
+        &lt;/div&gt;
+      )}
+    &lt;/div&gt;
+  );
+}</code></pre>
+      </div>
+    </div>
+
+    <!-- Card 3 -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Program 6: Async User List with Loader</div>
+          <div class="card-subtitle">Routing, useEffect, mock delay, and conditional rendering</div>
+        </div>
+        <button class="copy-btn" onclick="copyCode('code-prog-6', this)">
+          Copy Code
+        </button>
+      </div>
+      <div class="code-container">
+        <pre><code id="code-prog-6">// Program 6: SPA with routing (Home, Users), useEffect + useState,
+// conditional rendering and a loading indicator.
+// Offline: the "public API" is replaced by a local function that returns
+// data after a delay (same behaviour as fetch, but no internet).
+// Needs: npm install react-router-dom (one-time). Usage: save as src/App.jsx
+import React, { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, NavLink } from "react-router-dom";
+
+// ---------- Fake API (replaces https://jsonplaceholder.typicode.com/users) ----------
+const USERS_DATA = [
+  { id: 1, name: "Leanne Graham", email: "leanne@example.com", city: "Hyderabad" },
+  { id: 2, name: "Ervin Howell", email: "ervin@example.com", city: "Chennai" },
+  { id: 3, name: "Clementine Bauch", email: "clem@example.com", city: "Mumbai" },
+  { id: 4, name: "Patricia Lebsack", email: "patricia@example.com", city: "Delhi" },
+  { id: 5, name: "Chelsey Dietrich", email: "chelsey@example.com", city: "Pune" },
+];
+
+const fetchUsers = (shouldFail = false) =>
+  new Promise((resolve, reject) => {
+    setTimeout(() => {
+      shouldFail ? reject(new Error("Failed to load users")) : resolve(USERS_DATA);
+    }, 2000); // simulate 2-second network delay
+  });
+
+// ---------- Pages ----------
+const Home = () => (
+  &lt;div&gt;
+    &lt;h2&gt;Home&lt;/h2&gt;
+    &lt;p&gt;Open the Users page to see data loaded with useEffect.&lt;/p&gt;
+  &lt;/div&gt;
+);
+
+function Users() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchUsers()
+      .then((data) => setUsers(data))
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []); // runs once when the page mounts
+
+  // Conditional rendering
+  if (loading) return &lt;p&gt;Loading users...&lt;/p&gt;;
+  if (error) return &lt;p style={{ color: "red" }}&gt;{error}&lt;/p&gt;;
+
+  return (
+    &lt;div&gt;
+      &lt;h2&gt;Users&lt;/h2&gt;
+      &lt;table border="1" cellPadding="8" style={{ borderCollapse: "collapse" }}&gt;
+        &lt;thead&gt;
+          &lt;tr&gt;&lt;th&gt;ID&lt;/th&gt;&lt;th&gt;Name&lt;/th&gt;&lt;th&gt;Email&lt;/th&gt;&lt;th&gt;City&lt;/th&gt;&lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody&gt;
+          {users.map((u) => (
+            &lt;tr key={u.id}&gt;
+              &lt;td&gt;{u.id}&lt;/td&gt;&lt;td&gt;{u.name}&lt;/td&gt;&lt;td&gt;{u.email}&lt;/td&gt;&lt;td&gt;{u.city}&lt;/td&gt;
+            &lt;/tr&gt;
+          ))}
+        &lt;/tbody&gt;
+      &lt;/table&gt;
+    &lt;/div&gt;
+  );
+}
+
+// ---------- App ----------
+export default function App() {
+  const link = ({ isActive }) => ({
+    marginRight: 15, fontWeight: isActive ? "bold" : "normal",
+  });
+  return (
+    &lt;BrowserRouter&gt;
+      &lt;nav style={{ padding: 12, background: "#eee" }}&gt;
+        &lt;NavLink to="/" style={link}&gt;Home&lt;/NavLink&gt;
+        &lt;NavLink to="/users" style={link}&gt;Users&lt;/NavLink&gt;
+      &lt;/nav&gt;
+      &lt;div style={{ padding: 20 }}&gt;
+        &lt;Routes&gt;
+          &lt;Route path="/" element={&lt;Home /&gt;} /&gt;
+          &lt;Route path="/users" element={&lt;Users /&gt;} /&gt;
+        &lt;/Routes&gt;
+      &lt;/div&gt;
+    &lt;/BrowserRouter&gt;
+  );
+}</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function copyCode(elementId, btnElement) {
+      const codeText = document.getElementById(elementId).innerText;
+      navigator.clipboard.writeText(codeText).then(() => {
+        const originalText = btnElement.innerText;
+        btnElement.innerText = "Copied!";
+        btnElement.classList.add("copied");
+        setTimeout(() => {
+          btnElement.innerText = originalText;
+          btnElement.classList.remove("copied");
+        }, 2000);
+      }).catch(err => {
+        console.error("Failed to copy:", err);
+      });
+    }
+  </script>
+</body>
+</html>
